@@ -1,0 +1,63 @@
+{
+  "manifest_version": 2,
+  "name": "NiceMed",
+  "version": "1.0.0",
+  "description": "显示 PubMed 中论文所在期刊的中科院分区、影响因子和预警信息。",
+  "author": "aoaim",
+  "homepage_url": "https://github.com/aoaim/NiceMed",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://pubmed.ncbi.nlm.nih.gov/*"
+      ],
+      "js": [
+        "content/constants.js",
+        "content/common.js",
+        "content/pubmed.js"
+      ],
+      "css": [
+        "styles/badge.css"
+      ]
+    },
+    {
+      "matches": [
+        "https://scholar.google.com/*",
+        "https://scholar.google.com.hk/*",
+        "https://scholar.google.com.sg/*",
+        "https://scholar.google.co.jp/*",
+        "https://scholar.google.co.uk/*",
+        "https://scholar.google.de/*",
+        "https://scholar.google.fr/*"
+      ],
+      "js": [
+        "content/constants.js",
+        "content/common.js",
+        "content/scholar.js"
+      ],
+      "css": [
+        "styles/badge.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "nicemed@extension",
+      "strict_min_version": "102.0"
+    }
+  }
+}
