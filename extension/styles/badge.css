@@ -119,23 +119,91 @@
   border: 1px solid #b2f5ea;
 }
 
-/* Dark mode support */
+/* Tooltip */
+.nicemed-badge[title] {
+  cursor: help;
+}
+
+/* Loading state */
+.nicemed-loading {
+  opacity: 0.7;
+  animation: nicemed-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes nicemed-pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 0.4; }
+}
+
+/* Google Scholar - PubMed Search Button */
+.nicemed-pubmed-btn {
+  display: inline-block;
+  margin-left: 10px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #c53030;
+  background-color: #fff5f5;
+  border: 1px solid #feb2b2;
+  border-radius: 3px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nicemed-pubmed-btn:hover {
+  background-color: #fed7d7;
+  border-color: #fc8181;
+  color: #9b2c2c;
+  text-decoration: none;
+}
+
+/* PubMed - Copy Title Button */
+.nicemed-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-right: 4px;
+  padding: 0;
+  background: none !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  vertical-align: middle;
+  color: #6a737d;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.nicemed-copy-btn:hover,
+.nicemed-copy-btn:focus,
+.nicemed-copy-btn:active {
+  background: none !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.nicemed-copy-btn svg {
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+}
+
+/* Success state - green checkmark */
+.nicemed-copy-btn.nicemed-copy-success {
+  color: #22863a;
+}
+
+/* ===== Dark Mode (single consolidated block) ===== */
 @media (prefers-color-scheme: dark) {
   .nicemed-badge-name {
     color: #c9d1d9;
     border-color: #30363d;
-  }
-  
-  .nicemed-badge-warning {
-    background-color: #3e1b1b;
-    color: #ff7b72;
-    border-color: #6e2a2a;
-  }
-  
-  .nicemed-badge-mega {
-    background-color: #1a3835;
-    color: #7cebe0;
-    border-color: #2c5f5b;
   }
 
   .nicemed-badge-if {
@@ -183,107 +251,34 @@
     color: #b392f0;
     border-color: #4a3870;
   }
-}
 
-/* Tooltip */
-.nicemed-badge[title] {
-  cursor: help;
-}
+  .nicemed-badge-warning {
+    background-color: #3e1b1b;
+    color: #ff7b72;
+    border-color: #6e2a2a;
+  }
 
-/* Loading state */
-.nicemed-loading {
-  opacity: 0.7;
-  animation: nicemed-pulse 1.5s ease-in-out infinite;
-}
+  .nicemed-badge-mega {
+    background-color: #1a3835;
+    color: #7cebe0;
+    border-color: #2c5f5b;
+  }
 
-@keyframes nicemed-pulse {
-  0%, 100% { opacity: 0.7; }
-  50% { opacity: 0.4; }
-}
-
-/* Google Scholar - PubMed Search Button */
-.nicemed-pubmed-btn {
-  display: inline-block;
-  margin-left: 10px;
-  padding: 2px 8px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #c53030;
-  background-color: #fff5f5;
-  border: 1px solid #feb2b2;
-  border-radius: 3px;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.nicemed-pubmed-btn:hover {
-  background-color: #fed7d7;
-  border-color: #fc8181;
-  color: #9b2c2c;
-  text-decoration: none;
-}
-
-/* Dark mode */
-@media (prefers-color-scheme: dark) {
   .nicemed-pubmed-btn {
     background-color: #3d2020;
     color: #fc8181;
     border-color: #9b2c2c;
   }
-  
+
   .nicemed-pubmed-btn:hover {
     background-color: #5d2525;
     border-color: #fc8181;
   }
-}
-/* PubMed - Copy Title Button */
-.nicemed-copy-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 14px;
-  height: 14px;
-  margin-right: 4px;
-  padding: 0;
-  background: none !important;
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-  cursor: pointer;
-  vertical-align: middle;
-  color: #6a737d;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-}
 
-.nicemed-copy-btn:hover,
-.nicemed-copy-btn:focus,
-.nicemed-copy-btn:active {
-  background: none !important;
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-.nicemed-copy-btn svg {
-  width: 12px;
-  height: 12px;
-  pointer-events: none;
-}
-
-/* Success state - green checkmark */
-.nicemed-copy-btn.nicemed-copy-success {
-  color: #22863a;
-}
-
-/* Dark mode */
-@media (prefers-color-scheme: dark) {
   .nicemed-copy-btn {
     color: #8b949e;
   }
-  
+
   .nicemed-copy-btn.nicemed-copy-success {
     color: #85e89d;
   }

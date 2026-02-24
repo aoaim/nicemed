@@ -11,8 +11,7 @@
     "128": "icons/icon-128.png"
   },
   "permissions": [
-    "activeTab",
-    "storage"
+    "activeTab"
   ],
   "content_scripts": [
     {
@@ -33,10 +32,19 @@
         "https://scholar.google.com/*",
         "https://scholar.google.com.hk/*",
         "https://scholar.google.com.sg/*",
+        "https://scholar.google.com.au/*",
+        "https://scholar.google.com.br/*",
+        "https://scholar.google.com.tw/*",
         "https://scholar.google.co.jp/*",
         "https://scholar.google.co.uk/*",
+        "https://scholar.google.co.kr/*",
+        "https://scholar.google.co.in/*",
         "https://scholar.google.de/*",
-        "https://scholar.google.fr/*"
+        "https://scholar.google.fr/*",
+        "https://scholar.google.ca/*",
+        "https://scholar.google.es/*",
+        "https://scholar.google.it/*",
+        "https://scholar.google.ru/*"
       ],
       "js": [
         "content/constants.js",

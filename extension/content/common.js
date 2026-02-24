@@ -4,13 +4,10 @@
  */
 
 const NiceMed = {
-  // Constants (fallback if constants.js didn't load)
-  CONSTANTS: typeof NiceMedConstants !== 'undefined' ? NiceMedConstants : {
-    APP_NAME: 'NiceMed',
-    BADGE_CLASS_PREFIX: 'nicemed-',
-    ATTR_PROCESSED: 'data-nicemed-processed',
-    ATTR_CONTAINER: 'data-nicemed-container'
-  },
+  CONSTANTS: NiceMedConstants,
+
+  // Per-page query cache to avoid redundant IPC calls
+  _cache: new Map(),
 
   /**
    * Log message with prefix
@@ -20,14 +17,28 @@ const NiceMed = {
   },
 
   /**
-   * Query journal info from background script
+   * Build cache key from query object
+   */
+  _cacheKey(query) {
+    return (query.issn || '') + '|' + (query.eissn || '') + '|' + (query.name || '').toUpperCase();
+  },
+
+  /**
+   * Query journal info from background script (with cache)
    */
   async queryJournal(query) {
+    const key = this._cacheKey(query);
+    if (this._cache.has(key)) {
+      return this._cache.get(key);
+    }
+
     try {
-      return await browser.runtime.sendMessage({
+      const result = await browser.runtime.sendMessage({
         type: 'queryJournal',
         query
       });
+      this._cache.set(key, result);
+      return result;
     } catch (error) {
       this.log('Query failed:', error);
       return null;
@@ -102,7 +113,7 @@ const NiceMed = {
 
     // Badge 5: Top Journal
     if (journal.isTop) {
-      container.appendChild(this.createBadge('🏆 TOP', 'top', 'Top期刊'));
+      container.appendChild(this.createBadge('🏆 TOP', 'top', 'Top 期刊'));
     }
 
     // Badge 6: Warning Journal

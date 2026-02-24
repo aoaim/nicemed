@@ -24,22 +24,22 @@ function parseCSV(content) {
 
   // Parse header
   const headers = parseCSVLine(lines[0]);
-  
+
   const results = [];
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue;
-    
+
     const values = parseCSVLine(line);
     const obj = {};
-    
+
     for (let j = 0; j < headers.length; j++) {
       obj[headers[j]] = values[j] || '';
     }
-    
+
     results.push(obj);
   }
-  
+
   return results;
 }
 
@@ -50,10 +50,10 @@ function parseCSVLine(line) {
   const result = [];
   let current = '';
   let inQuotes = false;
-  
+
   for (let i = 0; i < line.length; i++) {
     const char = line[i];
-    
+
     if (char === '"') {
       if (inQuotes && line[i + 1] === '"') {
         current += '"';
@@ -68,7 +68,7 @@ function parseCSVLine(line) {
       current += char;
     }
   }
-  
+
   result.push(current.trim());
   return result;
 }
@@ -135,28 +135,28 @@ function isMega(value) {
 /**
  * Main conversion function
  */
-async function convert() {
+function convert() {
   console.log('Loading CSV files...');
-  
+
   // Load CAS data
   const casContent = fs.readFileSync(CAS_CSV, 'utf-8');
   const casData = parseCSV(casContent);
   console.log(`Parsed ${casData.length} CAS entries`);
-  
+
   // Load JCR data
   const jcrContent = fs.readFileSync(JCR_CSV, 'utf-8');
   const jcrData = parseCSV(jcrContent);
   console.log(`Parsed ${jcrData.length} JCR entries`);
-  
+
   // Build journal database indexed by ISSN
   const journals = {};
-  
+
   // Index by both ISSN and eISSN
   const excludedIssns = new Set();
-  
+
   // Filter out non-science/medical categories as requested
   const excludedCategories = [
-    '文学', '历史学', '艺术学', '管理学', '社会学', 
+    '文学', '历史学', '艺术学', '管理学', '社会学',
     '经济学', '法学', '哲学', '教育学',
     '工程技术', '计算机科学', '地球科学', '数学', '物理与天体物理'
   ];
@@ -164,15 +164,15 @@ async function convert() {
   for (const row of casData) {
     const journalName = row['Journal'];
     if (!journalName) continue;
-    
+
     // Parse ISSN/EISSN field (format: "1234-5678/8765-4321")
     const issnField = row['ISSN/EISSN'] || '';
     const issnParts = issnField.split('/');
     const issn = normalizeISSN(issnParts[0]);
     const eissn = normalizeISSN(issnParts[1]);
-    
+
     const casCategory = row['大类'] || null;
-    
+
     if (excludedCategories.includes(casCategory)) {
       if (issn) excludedIssns.add(issn);
       if (eissn) excludedIssns.add(eissn);
@@ -181,7 +181,7 @@ async function convert() {
 
     const casDivision = parseCasDivision(row['大类分区']);
     const mark = row['标注'];
-    
+
     const journal = {
       name: journalName,
       issn: issn,
@@ -196,7 +196,7 @@ async function convert() {
       if: null,
       jcrQ: null
     };
-    
+
     // Index by both ISSN and eISSN
     if (issn) {
       journals[issn] = journal;
@@ -205,21 +205,21 @@ async function convert() {
       journals[eissn] = journal;
     }
   }
-  
+
   console.log(`Indexed ${Object.keys(journals).length} entries from CAS data`);
   console.log(`Blacklisted ${excludedIssns.size} ISSNs from excluded categories`);
-  
+
   // Process JCR data and merge
   let jcrMatched = 0;
   let jcrNew = 0;
-  
+
   for (const row of jcrData) {
     const journalName = row['Journal'];
     if (!journalName) continue;
-    
+
     const issn = normalizeISSN(row['ISSN']);
     const eissn = normalizeISSN(row['eISSN']);
-    
+
     // Skip blacklisted journals
     if ((issn && excludedIssns.has(issn)) || (eissn && excludedIssns.has(eissn))) {
       continue;
@@ -227,7 +227,7 @@ async function convert() {
 
     const ifValue = parseFloat(row['IF(2024)']);
     const jcrQ = row['IF Quartile(2024)'];
-    
+
     // Try to find existing entry
     let journal = null;
     if (issn && journals[issn]) {
@@ -237,7 +237,7 @@ async function convert() {
       journal = journals[eissn];
       jcrMatched++;
     }
-    
+
     if (journal) {
       // Merge JCR data into existing entry
       if (!isNaN(ifValue)) {
@@ -262,7 +262,7 @@ async function convert() {
         if: isNaN(ifValue) ? null : ifValue,
         jcrQ: jcrQ || null
       };
-      
+
       if (issn) {
         journals[issn] = newJournal;
         jcrNew++;
@@ -272,53 +272,58 @@ async function convert() {
       }
     }
   }
-  
+
   console.log(`JCR data: ${jcrMatched} matched, ${jcrNew} new entries`);
   console.log(`Total entries: ${Object.keys(journals).length}`);
-  
-  // Also create name-based index for fallback matching
-  const nameIndex = {};
+
+  // Write output — deduplicate by using ISSN as canonical key
+  const output = {};
+  const seen = new Map(); // journalKey -> canonical ISSN key
+
   for (const key in journals) {
     const journal = journals[key];
-    const normalizedName = journal.name.toUpperCase().replace(/[^A-Z0-9]/g, '');
-    if (!nameIndex[normalizedName]) {
-      nameIndex[normalizedName] = key;
+    const journalKey = journal.issn || journal.eissn || journal.name;
+
+    if (seen.has(journalKey)) {
+      // Point to the same canonical entry
+      output[key] = seen.get(journalKey);
+      continue;
     }
+
+    // Create optimized entry (omit falsy fields to reduce JSON size)
+    const entry = { name: journal.name };
+    if (journal.issn) entry.issn = journal.issn;
+    if (journal.eissn) entry.eissn = journal.eissn;
+    if (journal.casCategory) entry.casCategory = journal.casCategory;
+    if (journal.casQ) entry.casQ = journal.casQ;
+    if (journal.casRank) entry.casRank = journal.casRank;
+    if (journal.isTop) entry.isTop = true;
+    if (journal.isChinaSupport) entry.isChinaSupport = true;
+    if (journal.isWarning) entry.isWarning = true;
+    if (journal.isMega) entry.isMega = true;
+    if (journal.if) entry.if = journal.if;
+    if (journal.jcrQ) entry.jcrQ = journal.jcrQ;
+
+    output[key] = entry;
+    seen.set(journalKey, entry);
   }
-  
-  // Write output
+
+  // Ensure output directory exists
   const outputDir = path.dirname(OUTPUT_JSON);
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
   }
-  
-  // Create optimized output with name aliases
-  const output = {};
-  const seen = new Set();
-  
-  for (const key in journals) {
-    const journal = journals[key];
-    // Avoid duplicating the same journal object
-    const journalKey = journal.issn || journal.eissn || journal.name;
-    if (seen.has(journalKey)) {
-      // Just add a reference
-      output[key] = journals[journal.issn || journal.eissn];
-      continue;
-    }
-    seen.add(journalKey);
-    output[key] = journal;
-  }
-  
+
   fs.writeFileSync(OUTPUT_JSON, JSON.stringify(output, null, 0));
-  
+
   const stats = fs.statSync(OUTPUT_JSON);
   console.log(`\nOutput written to: ${OUTPUT_JSON}`);
   console.log(`File size: ${(stats.size / 1024 / 1024).toFixed(2)} MB`);
-  
+
   // Generate some stats
   let withIF = 0, withCasQ = 0, withTop = 0, withCnSupport = 0, withWarning = 0, withMega = 0;
   const uniqueJournals = new Set();
-  
+
   for (const key in output) {
     const j = output[key];
     uniqueJournals.add(j.name);
@@ -329,7 +334,7 @@ async function convert() {
     if (j.isWarning) withWarning++;
     if (j.isMega) withMega++;
   }
-  
+
   console.log(`\nStats:`);
   console.log(`  Unique journals: ${uniqueJournals.size}`);
   console.log(`  With IF: ${withIF}`);
@@ -341,4 +346,4 @@ async function convert() {
 }
 
 // Run
-convert().catch(console.error);
+convert();
